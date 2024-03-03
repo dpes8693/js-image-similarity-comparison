@@ -10,6 +10,7 @@ function memoizeCosines(N, cosMap) {
     }
     return cosMap;
 }
+// 离散余弦变换
 function dct(signal, scale = 2) {
     let L = signal.length;
     let cosMap = null;
@@ -23,6 +24,7 @@ function dct(signal, scale = 2) {
         }, 0);
     });
 }
+// 一维数组升维
 function createMatrix(arr) {
     const length = arr.length;
     const matrixWidth = Math.sqrt(length);
@@ -33,6 +35,7 @@ function createMatrix(arr) {
     }
     return matrix;
 }
+// 从矩阵中获取其“左上角”大小为 range × range 的内容
 function getMatrixRange(matrix, range = 1) {
     const rangeMatrix = [];
     for (let i = 0; i < range; i++) {
@@ -42,6 +45,7 @@ function getMatrixRange(matrix, range = 1) {
     }
     return rangeMatrix;
 }
+// 灰度化
 export function createGrayscale(imgData) {
     const newData = Array(imgData.data.length);
     newData.fill(0);
@@ -59,6 +63,7 @@ export function createGrayscale(imgData) {
     });
     return createImgData(newData);
 }
+// 感知哈希算法 ( Perceptual Hash Algorithm )
 export function getPHashFingerprint(imgData) {
     const dctData = dct(imgData.data);
     const dctMatrix = createMatrix(dctData);
@@ -66,6 +71,7 @@ export function getPHashFingerprint(imgData) {
     const rangeAve = rangeMatrix.reduce((pre, cur) => pre + cur, 0) / rangeMatrix.length;
     return rangeMatrix.map(val => (val >= rangeAve ? 1 : 0)).join('');
 }
+// 均值哈希算法（Average Hash Algorithm )
 export function getAHashFingerprint(imgData) {
     const grayList = imgData.data.reduce((pre, cur, index) => {
         if ((index + 1) % 4 === 0) {

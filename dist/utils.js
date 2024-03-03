@@ -1,3 +1,4 @@
+// 图片压缩
 export function compressImg(imgSrc, imgWidth = 8) {
     return new Promise((resolve, reject) => {
         if (!imgSrc) {
@@ -27,6 +28,8 @@ export function getSrcFromImageData(imgData) {
     (_a = ctx) === null || _a === void 0 ? void 0 : _a.putImageData(imgData, 0, 0);
     return canvas.toDataURL();
 }
+// 图片灰度化
+// 根据 RGBA 数组生成 ImageData
 export function createImgData(dataDetail) {
     var _a;
     const canvas = document.createElement('canvas');

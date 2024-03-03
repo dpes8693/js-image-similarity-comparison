@@ -33,6 +33,7 @@ export default class Presbyopic {
         this.imgSrc = imgSrc;
         this.imgWidth = imgWidth;
     }
+    // 比對指紋
     static compareFingerprint(fingerprint1, fingerprint2, method) {
         if (!method) {
             throw new Error(`Param "method" must be one of "perceptual hash", "color seperate" or "content feature", but found "${method}"`);
@@ -66,6 +67,7 @@ export default class Presbyopic {
             };
         }
     }
+    // 图片压缩
     compressImg() {
         return __awaiter(this, void 0, void 0, function* () {
             return Utils.compressImg(this.imgSrc, this.imgWidth);
@@ -77,6 +79,7 @@ export default class Presbyopic {
             return imgData;
         });
     }
+    // 哈希算法
     getHash(isPHash = false) {
         return __awaiter(this, void 0, void 0, function* () {
             const imgData = yield this.compressImg();
@@ -89,6 +92,7 @@ export default class Presbyopic {
             });
         });
     }
+    // 顏色分布算法
     colorSeperate(zoneAmount = 4) {
         return __awaiter(this, void 0, void 0, function* () {
             const imgData = yield this.compressImg();
@@ -102,6 +106,7 @@ export default class Presbyopic {
             });
         });
     }
+    // 內容特徵算法
     contentFeature() {
         return __awaiter(this, void 0, void 0, function* () {
             const imgData = yield this.compressImg();
