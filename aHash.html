@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<!-- saved from url=(0014)about:internet -->
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        font-size: 13px;
+      }
+      .table-td {
+        width: 260px;
+        height: 260px;
+        text-align: center;
+        padding: 10px;
+      }
+      .table-td img {
+        object-fit: contain;
+        width: 99%;
+        height: 99%;
+      }
+      .table td input {
+        width: 99%;
+        box-sizing: border-box;
+      }
+      .tools {
+        width: 200px;
+        display: flex;
+        flex-direction: column;
+      }
+      tbody tr {
+        padding: 10px;
+      }
+      tbody tr:nth-child(n + 2):nth-child(-n + 4) {
+        background-color: rgb(180, 180, 180);
+      }
+      tbody tr:nth-child(n + 8) {
+        background-color: rgb(254, 255, 236);
+      }
+    </style>
+    <title>Playground</title>
+  </head>
+  <body>
+    <div id="app">
+      <div style="display: flex; justify-content: center; align-items: center">
+        <div class="tools">
+          <!-- imgWidth -->
+          <p>图片大小: {{imgWidth}} × {{imgWidth}}</p>
+          <input
+            @change="onRangeChange"
+            type="range"
+            max="36"
+            min="8"
+            step="4"
+            v-model="imgWidth"
+          />
+          <input @change="onItemChange($event, 'img1')" type="file" />
+          <input @change="onItemChange($event, 'img2')" type="file" />
+        </div>
+        <!-- table start -->
+        <table class="table" border="1" cellspacing="0">
+          <tr>
+            <th>原图</th>
+            <th>平均哈希算法</th>
+          </tr>
+          <tr>
+            <td class="table-td">
+              <img :src="img1.src.raw" alt="" srcset="" />
+            </td>
+            <td class="table-td">
+              <img :src="img1.src.aHash" alt="" srcset="" />
+            </td>
+          </tr>
+          <tr>
+            <td>特征值</td>
+            <td>
+              <input type="text" :value="img1.fingerprint.aHash" />
+            </td>
+          </tr>
+          <tr>
+            <td>特征长度</td>
+            <td>
+              <input type="text" :value="img1.fingerprint.aHash.length" />
+            </td>
+          </tr>
+
+          <tr>
+            <td class="table-td">
+              <img :src="img2.src.raw" alt="" srcset="" />
+            </td>
+            <td class="table-td">
+              <img :src="img2.src.aHash" alt="" srcset="" />
+            </td>
+          </tr>
+          <tr>
+            <td>特征值</td>
+            <td>
+              <input type="text" :value="img2.fingerprint.aHash" />
+            </td>
+          </tr>
+          <tr>
+            <td>特征长度</td>
+            <td>
+              <input type="text" :value="img2.fingerprint.aHash.length" />
+            </td>
+          </tr>
+
+          <tr>
+            <td>比对结果</td>
+            <td>
+              <pre>{{compareResult.aHash}}</pre>
+            </td>
+          </tr>
+        </table>
+        <!-- table end -->
+      </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.min.js"></script>
+
+    <script type="module">
+      import Presbyopic from "./dist/presbyopic.js";
+      new Vue({
+        el: "#app",
+        data: {
+          img1: {
+            src: {
+              raw: "",
+              aHash: "",
+            },
+            fingerprint: {
+              aHash: "",
+            },
+          },
+          img2: {
+            src: {
+              raw: "",
+              aHash: "",
+            },
+            fingerprint: {
+              aHash: "",
+            },
+          },
+          imgWidth: 16,
+          compareResult: {
+            aHash: "",
+          },
+        },
+        methods: {
+          onItemChange(e, picNum = "img1") {
+            const self = this;
+            const file = e.target.files[0];
+            if (!file) {
+              return;
+            }
+            if (!/\/(?:jpeg|jpg|png)/i.test(file.type)) {
+              return;
+            }
+            const reader = new FileReader();
+            reader.onload = function () {
+              const result = this.result;
+              let img = new Image();
+              img.onload = function () {
+                let canvas = document.createElement("canvas");
+                let ctx = canvas.getContext("2d");
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0, img.width, img.height);
+                // 取圖SRC
+                const UURRLL = canvas.toDataURL();
+                console.log(UURRLL, picNum);
+                self.takeImgSrcs(UURRLL, picNum);
+                img = null;
+              };
+              img.src = result;
+            };
+            reader.readAsDataURL(file);
+          },
+          onRangeChange() {
+            const raw1 = this.img1.src.raw;
+            const raw2 = this.img2.src.raw;
+            raw1 && this.takeImgSrcs(raw1, "img1");
+            raw2 && this.takeImgSrcs(raw2, "img2");
+            // 比
+            raw1 && raw2 && this.compare();
+          },
+          // 取圖SRC
+          async takeImgSrcs(base64, picNum = "img1") {
+            this[picNum].src.raw = base64;
+            const presbyopic = new Presbyopic({
+              imgSrc: base64,
+              imgWidth: this.imgWidth,
+            });
+            const isPHash = false;
+            const data1 = await presbyopic.getHash(isPHash);
+            this[picNum]["src"]["aHash"] = data1.getNewImg();
+
+            this[picNum]["fingerprint"]["aHash"] = data1.fingerprint;
+            // 比
+            this.compare();
+          },
+          // 比
+          compare() {
+            if (
+              this.img1.fingerprint.aHash.length ===
+              this.img2.fingerprint.aHash.length
+            )
+              this.compareResult.aHash = JSON.stringify(
+                Presbyopic.compareFingerprint(
+                  this.img1.fingerprint.aHash,
+                  this.img2.fingerprint.aHash,
+                  "average hash"
+                ),
+                null,
+                2
+              );
+          },
+        },
+      });
+    </script>
+  </body>
+</html>
